@@ -17,8 +17,10 @@ const loader = (tOrf) => {
 const buttonActive = (activeId) => {
   const removeClass = document.querySelectorAll('.lesson-button');
   removeClass.forEach((button) => button.classList.remove('active'));
-  const addClass = document.getElementById(`lesson-button-${activeId}`);
-  addClass.classList.add('active');
+  if (activeId) {
+    const addClass = document.getElementById(`lesson-button-${activeId}`);
+    addClass.classList.add('active');
+  }
 };
 
 const synonymsFunc = (synonymItem) => {
@@ -49,23 +51,6 @@ const info = async (id) => {
   const dataFetch = await fetch(url);
   const dataJson = await dataFetch.json();
   const lessonsData = dataJson.data;
-  console.log(lessonsData);
-  //   {
-  //     "word": "Cautious",
-  //     "meaning": "সতর্ক",
-  //     "pronunciation": "কশাস",
-  //     "level": 2,
-  //     "sentence": "Be cautious while crossing the road.",
-  //     "points": 2,
-  //     "partsOfSpeech": "adjective",
-  //     "synonyms": [
-  //         "careful",
-  //         "alert",
-  //         "watchful"
-  //     ],
-  //     "id": 3
-  // }
-
   const popup = document.getElementById('popup');
   popup.innerHTML = `
    <dialog id="my_modal" class="modal modal-bottom sm:modal-middle">
@@ -114,9 +99,37 @@ const lessonsItem = async (id) => {
   const dataFetch = await fetch(url);
   const dataJson = await dataFetch.json();
   const lessonData = dataJson.data;
+  lessonsItemShow(lessonData);
+  buttonActive(id);
+};
+
+// search
+const searchItem = async () => {
+  loader(true);
+  buttonActive();
+  const url = 'https://openapi.programming-hero.com/api/words/all';
+  const dataFetch = await fetch(url);
+  const dataJson = await dataFetch.json();
+  const allDataArray = dataJson.data;
+  const searchInput = document.getElementById('search-input');
+  const searchValue = searchInput.value.trim().toLowerCase();
+  // console.log(allDataArray);
+  const filter = allDataArray.filter((data) =>
+    data.word.toLowerCase().includes(searchValue)
+  );
+  if (searchValue) {
+    lessonsItemShow(filter);
+    searchInput.parentNode.classList.remove('border-red-600', 'border-2');
+  } else {
+    searchInput.parentNode.classList.add('border-red-600', 'border-2');
+    loader(false);
+  }
+};
+
+const lessonsItemShow = (dataArray) => {
   const lessonItemDiv = document.getElementById('lesson-item-div');
   lessonItemDiv.innerHTML = '';
-  if (lessonData.length === 0) {
+  if (dataArray.length === 0) {
     const newDiv = document.createElement('div');
     newDiv.classList.add('col-span-full', 'space-y-5', 'py-10');
     newDiv.innerHTML = `
@@ -130,10 +143,9 @@ const lessonsItem = async (id) => {
     `;
     lessonItemDiv.appendChild(newDiv);
     loader(false);
-    buttonActive(id);
     return;
   }
-  lessonData.map((data) => {
+  dataArray.map((data) => {
     const newDiv = document.createElement('div');
     newDiv.innerHTML = `
         <div class="bg-white p-5 rounded flex flex-col justify-between">
@@ -161,7 +173,6 @@ const lessonsItem = async (id) => {
 
     lessonItemDiv.appendChild(newDiv);
     loader(false);
-    buttonActive(id);
   });
 };
 
